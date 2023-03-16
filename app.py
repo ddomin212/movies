@@ -3,10 +3,12 @@ import numpy as np
 import math
 import pandas as pd
 import pickle
+import bz2
 
 app = Flask(__name__)
 fdf = pickle.load(open('data.pkl', 'rb'))
-cs_mat = pickle.load(open('cossim.pkl', 'rb'))
+cs_mat_data = bz2.BZ2File("BinaryData", 'rb');
+cs_mat = pickle.load(cs_mat_data);
 ind = pickle.load(open('ind.pkl', 'rb'))
 # ----functions for recommendation system----
 
