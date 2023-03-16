@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>The Recommendation Wizard - Result</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    />
+  </head>
+  <body>
+    <div class="container-fluid h-100">
+      <div class="row justify-content-center h-100">
+        <div class="col-md-6 mt-5 vertical-center">
+          <h1 class="text-center mb-4">The Recommendation Wizard</h1>
+          <p class="lead text-center">
+            {% for my_item in recommendation %}
+                <h6>{{loop.index}}</h6>
+                <h4>{{ my_item[0] }}</h4>
+                <p>{{ my_item[1] }}/10</p>
+            {% endfor %}
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
