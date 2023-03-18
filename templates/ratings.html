@@ -3,13 +3,7 @@ content %}
 <div class="container">
   <div class="row mb-5" style="margin-top: 32px">
     <div class="col-md-8 col-xl-6 col-xxl-6 text-center mx-auto">
-      <h2>Thine most cherished cinema</h2>
-      <p style="margin-top: 0px">
-        Hark! This repository of moving pictures is a veritable treasure trove,
-        where thou mayst procure a fresh array of films to regale thyself and
-        thy companions on a Friday eve. Let it be known, however, that no such
-        thing as "Netflix and chill" shall be permitted!<br /><br />
-      </p>
+      <h2>Thine critique de bibligrafique.</h2>
     </div>
   </div>
 </div>
@@ -22,7 +16,7 @@ content %}
         {% endif %}
         <div class="container py-4 py-xl-5" style="max-width: 100%">
           <div class="row gy-4 row-cols-1 row-cols-md-2 row-cols-xl-3">
-            {% for i in range(items) %}
+            {% for i in range(items) %} {% if (items*c+i)|float < nom %}
             <div class="col-lg-2 col-xl-2 col-xxl-2">
               <div class="card">
                 <img
@@ -49,7 +43,7 @@ content %}
                 </div>
               </div>
             </div>
-            {% endfor %}
+            {% endif %} {% endfor %}
           </div>
         </div>
         <div class="container">
@@ -58,27 +52,27 @@ content %}
           </p>
         </div>
       </div>
-    </div>
-    {% endfor %}
-    <div>
-      <a
-        class="carousel-control-prev"
-        href="#carousel-1"
-        role="button"
-        data-bs-slide="prev"
-        style="height: -150px"
-        ><span class="carousel-control-prev-icon"></span
-        ><span class="visually-hidden">Previous</span></a
-      ><a
-        class="carousel-control-next"
-        href="#carousel-1"
-        role="button"
-        data-bs-slide="next"
-        style="height: -150px"
-        ><span class="carousel-control-next-icon"></span
-        ><span class="visually-hidden">Next</span></a
-      >
+      {% endfor %}
+      <div>
+        <a
+          class="carousel-control-prev"
+          href="#carousel-1"
+          role="button"
+          data-bs-slide="prev"
+          style="height: 450px"
+          ><span class="carousel-control-prev-icon"></span
+          ><span class="visually-hidden">Previous</span></a
+        ><a
+          class="carousel-control-next"
+          href="#carousel-1"
+          role="button"
+          data-bs-slide="next"
+          style="height: 450px"
+          ><span class="carousel-control-next-icon"></span
+          ><span class="visually-hidden">Next</span></a
+        >
+      </div>
     </div>
   </div>
+  {% endblock %}
 </div>
-{% endblock %}

@@ -2,3 +2,8 @@ numpy
 pandas
 Flask
 gunicorn
+flask_bcrypt
+flask_sqlalchemy
+flask_login
+flask_cors
+flask_jwt_extended

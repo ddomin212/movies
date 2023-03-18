@@ -1,79 +1,173 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, url_for, redirect, request
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import InputRequired, Length, ValidationError
+from flask_bcrypt import Bcrypt
 import numpy as np
-import math
 import pandas as pd
+import math
+import csv
 import pickle
 import bz2
-
+from rec_funcs import *
+# --- init app ---
 app = Flask(__name__)
-fdf = pickle.load(open('data.pkl', 'rb'))
+bcrypt = Bcrypt(app)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+db = SQLAlchemy()
+app.config['SECRET_KEY'] = ')J@NcRfUjXn2r5u8x/A?D(G+KaPdSgVk'
+# --- login init ---
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+db.init_app(app)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+# --- define models ---
+
+
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(40), nullable=False, unique=True)
+    password = db.Column(db.String(80), nullable=False)
+
+
+class Movie(db.Model, UserMixin):
+    rating_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, foreign_key=True)
+    value = db.Column(db.Float, foreign_key=True, nullable=False)
+    movie_id = db.Column(db.Integer, nullable=False)
+
+
+with app.app_context():
+    db.create_all()
+
+
+class RegisterForm(FlaskForm):
+    username = StringField(validators=[
+                           InputRequired(), Length(min=4, max=40)], render_kw={"placeholder": "Username"})
+
+    password = PasswordField(validators=[
+                             InputRequired(), Length(min=8, max=20)], render_kw={"placeholder": "Password"})
+
+    submit = SubmitField('Register')
+
+    def validate_username(self, username):
+        existing_user_username = User.query.filter_by(
+            username=username.data).first()
+        if existing_user_username:
+            raise ValidationError(
+                'That username already exists. Please choose a different one.')
+
+
+class LoginForm(FlaskForm):
+    username = StringField(validators=[
+                           InputRequired(), Length(min=4, max=40)], render_kw={"placeholder": "Username"})
+
+    password = PasswordField(validators=[
+                             InputRequired(), Length(min=8, max=20)], render_kw={"placeholder": "Password"})
+
+    submit = SubmitField('Login')
+
+
+# --- load data ---
+df = pd.read_csv('data.csv')
 cs_mat_data = bz2.BZ2File("csf", 'rb')
 cs_mat_f = pickle.load(cs_mat_data)
 cs_mat_data = bz2.BZ2File("cs", 'rb')
 cs_mat = pickle.load(cs_mat_data)
 ind = pickle.load(open('ind.pkl', 'rb'))
-# ----functions for recommendation system----
+# --- auth routes ---
 
 
-def weighted_rating(x, m, C):
-    v = x['vote_count']
-    R = x['vote_average']
-    return round((v/(v+m) * R) + (m/(m+v) * C), 2)
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user:
+            if bcrypt.check_password_hash(user.password, form.password.data):
+                login_user(user)
+                return redirect(url_for('ratings'))
+    return render_template('login.html', form=form)
 
 
-def get_rec(name, ind, cs_mat):
-    idx = ind[name]
-    cos_sims = np.delete(cs_mat[idx, :], idx)
-    cos_index = ind.drop(name, 0)
-    return pd.Series(cos_sims, cos_index.values).sort_values(ascending=False)
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+
+    form = RegisterForm()
+
+    if form.validate_on_submit():
+        print("valid")
+        hashed_password = bcrypt.generate_password_hash(form.password.data)
+        new_user = User(username=form.username.data, password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('login'))
+
+    return render_template('register.html', form=form)
 
 
-def minmax(df):
-    df_norm = (df-df.min())/(df.max()-df.min())
-    return df_norm*11
+@app.route('/logout', methods=['GET', 'POST'])
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+# --- recommender routes ---
 
 
-def merge_res(textrec, featrec):
-    dfrc = textrec.to_frame().merge(featrec.rename(1), left_index=True, right_index=True)
-    dfrc[0] = minmax(dfrc[0])
-    return dfrc.sum(1).sort_values(ascending=False)
-
-
-def get_better_recommend(name, ind, cs_mat_f, cs_mat):
-    txtrec = get_rec(name, ind, cs_mat)
-    featrec = get_rec(name, ind, cs_mat_f)
-    top_25 = merge_res(txtrec, featrec).index[1:26].tolist()
-    movies = fdf.reindex(
-        top_25)[['original_title', 'vote_count', 'vote_average']]
-    vote_counts = movies[movies['vote_count'].notnull()
-                         ]['vote_count'].astype('int')
-    vote_averages = movies[movies['vote_average'].notnull(
-    )]['vote_average'].astype('int')
-    C = vote_averages.mean()
-    m = vote_counts.quantile(0.60)
-    qualified = movies[(movies['vote_count'] >= m) & (
-        movies['vote_count'].notnull()) & (movies['vote_average'].notnull())]
-    qualified['vote_count'] = qualified['vote_count'].astype('int')
-    qualified['vote_average'] = qualified['vote_average'].astype('int')
-    qualified['wr'] = qualified.apply(
-        (lambda x: weighted_rating(x, m, C)), axis=1)
-    qualified = qualified.sort_values('wr', ascending=False).head(10)
-    return qualified
-# ----------app-------------
-
-
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def recommendation_wizard():
-    if request.method == 'POST':
-        recommendation = request.form['recommendationInput']
-        try:
-            recommendation = get_better_recommend(
-                recommendation, ind, cs_mat_f, cs_mat)[["original_title", "wr"]].values.tolist()
-        except KeyError:
-            return render_template('404rec.html')
-        return render_template('result.html', recommendation=recommendation)
+    if current_user.is_authenticated:
+        data = Movie.query.all()
+        rdf = pd.DataFrame({"tmdbId": [i.movie_id for i in data], "rating": [
+            i.value for i in data], "userId": [i.user_id for i in data]})
+        svd = train_svd(rdf)
+        recommendation = get_hybrid(svd, df, ind, cs_mat, cs_mat_f,
+                                    rdf, current_user.id, count=12)[["original_title", "vote_average", "image_url", "movie_id"]].values.tolist()
     else:
-        return render_template('index.html')
+        recommendation = get_basic_rec(
+            df, count=12)[["original_title", "vote_average", "image_url", "movie_id"]].values.tolist()
+    carousels = 2
+    items = (len(recommendation)//(carousels))
+    return render_template('index.html', recommendation=recommendation, carousels=carousels, items=items)
+
+
+@app.route('/movie/<id>', methods=['GET', 'POST'])
+def get_movie_by_id(id):
+    if request.method == 'POST':
+        rating = request.form.get('rating')
+        new_rate = Movie(user_id=current_user.id, movie_id=id, value=rating)
+        db.session.add(new_rate)
+        db.session.commit()
+        return redirect('/')
+    else:
+        movie = df[df.movie_id == int(id)].to_dict(orient='records')[0]
+        print(movie)
+        recommendation = get_better_rec(
+            df, movie["index"], ind, cs_mat_f, cs_mat, 6)[["original_title", "vote_average", "image_url", "movie_id"]].to_dict(orient='records')
+        return render_template('movie.html', movie=movie, recommendation=recommendation)
+
+
+@app.route('/ratings', methods=['GET'])
+@login_required
+def ratings():
+    data = Movie.query.filter_by(user_id=current_user.id).all()
+    movies = [i.movie_id for i in data]
+    ratings = [i.value for i in data]
+    movie_names = [df[df.movie_id == i].original_title.values[0]
+                   for i in movies]
+    images = [df[df.movie_id == i].image_url.values[0] for i in movies]
+    recommendation = list(zip(movie_names, ratings, images, movies))
+    nom = len(movies)
+    carousels = math.ceil(nom/6) if nom > 6 else 1
+    items = 6
+    return render_template('ratings.html', recommendation=recommendation, carousels=carousels, items=items, nom=nom)
 
 
 @app.errorhandler(404)

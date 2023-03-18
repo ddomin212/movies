@@ -1,0 +1,68 @@
+{% extends "layout.html" %} {% block title %}Index{% endblock %} {% block
+content %}
+<div class="container py-4 py-xl-5">
+  <div class="row gy-4 gy-md-0">
+    <div class="col-md-6">
+      <div class="p-xl-5 m-xl-5">
+        <img
+          class="rounded img-fluid w-100 fit-cover"
+          style="min-height: 300px"
+          src="https://image.tmdb.org/t/p/original{{movie.image_url}}"
+        />
+      </div>
+    </div>
+    <div class="col-md-6 d-md-flex align-items-md-center">
+      <div style="max-width: 350px">
+        <h2 class="text-uppercase fw-bold">
+          {{ movie.original_title }} ({{ movie.yor }})
+        </h2>
+        <p class="my-3">
+          <br /><span style="color: rgb(232, 230, 227)"
+            >{{ movie.overview }}</span
+          ><br /><br />
+        </p>
+        {% if current_user.is_authenticated %}
+        <form name="rate-form" method="POST">
+          <div class="row">
+            <div class="col-8">
+              <input
+                class="form-control w-75 text-align-center"
+                name="rating"
+                value="0"
+                type="number"
+                max="10"
+                min="0"
+              />
+            </div>
+            <div class="col-2">
+              <button class="btn btn-primary" type="submit">Rate</button>
+            </div>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container py-4 py-xl-5">
+  <div class="row gy-4 row-cols-1 row-cols-md-2 row-cols-xl-3">
+    {% for rec in recommendation %}
+    <div class="col-lg-2 col-xl-2 col-xxl-2">
+      <div class="card">
+        <img
+          class="card-img-top w-100 d-block fit-cover d-md-block d-none"
+          style="height: 300px"
+          src="https://image.tmdb.org/t/p/original{{rec.image_url}}"
+        />
+        <div class="card-body p-4" style="height: 200px">
+          <p class="text-primary card-text mb-0">{{rec.original_title}}</p>
+          <p style="font-weight: bold; color: rgb(0, 0, 0); font-size: 22px">
+            {{rec.vote_average}} / 10
+          </p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+.fit-cover {
+  object-fit: cover;
+}
+
+@media (min-width: 1200px) {
+  element.style {
+  }
+}
+

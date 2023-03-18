@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {% block head %}
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
+    />
+    <title>TMDB Lite - {% block title %}{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="{{url_for('static', filename='bootstrap/css/bootstrap.min.css')}}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic&amp;display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Cabin:700&amp;display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{url_for('static', filename='css/Articles-Cards-images.css')}}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{url_for('static', filename='css/Login-Form-Basic-icons.css')}}"
+    />
+    {% endblock %}
+  </head>
+  <body>
+    <div id="content">
+      <nav
+        class="navbar navbar-light navbar-expand-md fixed-top"
+        id="mainNav"
+        style="position: relative"
+      >
+        <div class="container">
+          <a class="navbar-brand" href="/">TMDB Lite</a
+          ><button
+            data-bs-toggle="collapse"
+            class="navbar-toggler navbar-toggler-right"
+            data-bs-target="#navbarResponsive"
+            type="button"
+            aria-controls="navbarResponsive"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+            value="Menu"
+          >
+            <i class="fa fa-bars"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav ms-auto">
+              {% if current_user.is_authenticated %}
+              <li class="nav-item nav-link">
+                <a class="nav-link" href="/ratings">Rated</a>
+              </li>
+              <li class="nav-item nav-link">
+                <a class="nav-link" href="/logout">Log out</a>
+              </li>
+              {% else %}
+              <li class="nav-item nav-link">
+                <a class="nav-link" href="/register">Sign up</a>
+              </li>
+              <li class="nav-item nav-link">
+                <a class="nav-link" href="/login">Log in</a>
+              </li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+      </nav>
+      {% block content %}{% endblock %}
+    </div>
+    {% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% endblock %}
+  </body>
+</html>
