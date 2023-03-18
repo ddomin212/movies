@@ -2,6 +2,7 @@ numpy
 pandas
 Flask
 gunicorn
+surprise
 scikit-surprise
 flask_bcrypt
 flask_sqlalchemy
