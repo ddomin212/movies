@@ -2,8 +2,9 @@ numpy
 pandas
 Flask
 gunicorn
+scikit-surprise
 flask_bcrypt
 flask_sqlalchemy
 flask_login
 flask_cors
-flask_jwt_extended
+flask_wtf

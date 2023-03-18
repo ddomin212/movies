@@ -3,7 +3,25 @@ content %}
 <div class="container">
   <div class="row mb-5" style="margin-top: 32px">
     <div class="col-md-8 col-xl-6 col-xxl-6 text-center mx-auto">
-      <h2>Thine critique de bibligrafique.</h2>
+      <h2>{{heading}}</h2>
+      <p style="margin-top: 0px">{{message}}</p>
+      {% if index == "index" %}
+      <form action="" method="POST">
+        <div class="input-group">
+          <input
+            class="form-control"
+            type="text"
+            name="query"
+            placeholder="Search for a movie"
+          />
+          <div class="input-group-append">
+            <button class="btn btn-primary rounded-right" type="submit">
+              Search
+            </button>
+          </div>
+        </div>
+      </form>
+      {% endif %}
     </div>
   </div>
 </div>

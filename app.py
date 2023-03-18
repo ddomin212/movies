@@ -12,6 +12,8 @@ import csv
 import pickle
 import bz2
 from rec_funcs import *
+import warnings
+warnings.filterwarnings("ignore")
 # --- init app ---
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -40,7 +42,7 @@ class User(db.Model, UserMixin):
 class Movie(db.Model, UserMixin):
     rating_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, foreign_key=True)
-    value = db.Column(db.Float, foreign_key=True, nullable=False)
+    value = db.Column(db.Float, nullable=False)
     movie_id = db.Column(db.Integer, nullable=False)
 
 
@@ -121,37 +123,69 @@ def logout():
 # --- recommender routes ---
 
 
-@app.route('/', methods=['GET'])
+@app.route('/', methods=['GET', 'POST'])
 def recommendation_wizard():
-    if current_user.is_authenticated:
-        data = Movie.query.all()
-        rdf = pd.DataFrame({"tmdbId": [i.movie_id for i in data], "rating": [
-            i.value for i in data], "userId": [i.user_id for i in data]})
-        svd = train_svd(rdf)
-        recommendation = get_hybrid(svd, df, ind, cs_mat, cs_mat_f,
-                                    rdf, current_user.id, count=12)[["original_title", "vote_average", "image_url", "movie_id"]].values.tolist()
+    if request.method == 'POST':
+        query = request.form.get('query').lower()
+        print(query)
+        if query == "":
+            return render_template('404.html', error="400 Bad Request", message="Thy query be empty"), 400
+        s = df['original_title'].str.lower()
+        sdf = df[s.str.contains(query, na=False)]
+        listed = sdf[["original_title", "vote_average",
+                      "image_url", "movie_id"]].values.tolist()
+        print(listed)
+        nom = len(listed)
+        carousels = math.ceil(nom/6) if nom > 6 else 1
+        items = 6
+        return render_template('listing.html', recommendation=listed, carousels=carousels, items=items, nom=nom, heading="Thy search results")
     else:
-        recommendation = get_basic_rec(
-            df, count=12)[["original_title", "vote_average", "image_url", "movie_id"]].values.tolist()
-    carousels = 2
-    items = (len(recommendation)//(carousels))
-    return render_template('index.html', recommendation=recommendation, carousels=carousels, items=items)
+        if current_user.is_authenticated:
+            data = Movie.query.all()
+            rdf = pd.DataFrame({"tmdbId": [i.movie_id for i in data], "rating": [
+                i.value for i in data], "userId": [i.user_id for i in data]})
+            svd = train_svd(rdf)
+            recommendation = get_hybrid(svd, df, ind, cs_mat, cs_mat_f,
+                                        rdf, current_user.id, count=12)[["original_title", "vote_average", "image_url", "movie_id"]].values.tolist()
+        else:
+            recommendation = get_basic_rec(
+                df, count=12)[["original_title", "vote_average", "image_url", "movie_id"]].values.tolist()
+        carousels = 2
+        items = (len(recommendation)//(carousels))
+        return render_template('listing.html', recommendation=recommendation, carousels=carousels, items=items, nom=len(recommendation), heading="A Shakespearean Recommendation",
+                               index="index",
+                               message="""Hark! This repository of moving pictures is a veritable treasure trove,
+                                        where thou mayst procure a fresh array of films to regale thyself and
+                                        thy companions on a Friday eve. Let it be known, however, that no such
+                                        thing as "Netflix and chill" shall be permitted!""")
 
 
 @app.route('/movie/<id>', methods=['GET', 'POST'])
 def get_movie_by_id(id):
     if request.method == 'POST':
         rating = request.form.get('rating')
-        new_rate = Movie(user_id=current_user.id, movie_id=id, value=rating)
-        db.session.add(new_rate)
-        db.session.commit()
-        return redirect('/')
+        if int(rating) < 0 or int(rating) > 10:
+            return render_template('404.html', error="400 Bad Request", message="Thy critique be between 0 and 10"), 400
+        exists = Movie.query.filter_by(
+            user_id=current_user.id, movie_id=id).first()
+        if exists:
+            exists.value = rating
+            db.session.commit()
+            return redirect('/')
+        else:
+            new_rate = Movie(user_id=current_user.id,
+                             movie_id=id, value=rating)
+            db.session.add(new_rate)
+            db.session.commit()
+            return redirect('/')
     else:
         movie = df[df.movie_id == int(id)].to_dict(orient='records')[0]
+        exists = Movie.query.filter_by(
+            user_id=current_user.id, movie_id=id).first()
         print(movie)
         recommendation = get_better_rec(
             df, movie["index"], ind, cs_mat_f, cs_mat, 6)[["original_title", "vote_average", "image_url", "movie_id"]].to_dict(orient='records')
-        return render_template('movie.html', movie=movie, recommendation=recommendation)
+        return render_template('movie.html', movie=movie, recommendation=recommendation, exists=exists)
 
 
 @app.route('/ratings', methods=['GET'])
@@ -167,12 +201,12 @@ def ratings():
     nom = len(movies)
     carousels = math.ceil(nom/6) if nom > 6 else 1
     items = 6
-    return render_template('ratings.html', recommendation=recommendation, carousels=carousels, items=items, nom=nom)
+    return render_template('listing.html', recommendation=recommendation, index="rating", carousels=carousels, items=items, nom=nom, heading="Thine most cherished cinema",)
 
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('404.html'), 404
+    return render_template('404.html', error="404 Not Found", message="Thine page is deceased"), 404
 
 
 if __name__ == '__main__':

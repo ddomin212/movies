@@ -18,6 +18,11 @@ content %}
         </h2>
         <p class="my-3">
           <br /><span style="color: rgb(232, 230, 227)"
+            >Genres: {{movie.genres}}</span
+          ><br /><br />
+        </p>
+        <p class="my-3">
+          <br /><span style="color: rgb(232, 230, 227)"
             >{{ movie.overview }}</span
           ><br /><br />
         </p>
@@ -34,9 +39,16 @@ content %}
                 min="0"
               />
             </div>
+            {% if exists %}
+            <div class="col-2">
+              <button class="btn btn-secondary" type="submit">Edit</button>
+            </div>
+            {% else %}
             <div class="col-2">
               <button class="btn btn-primary" type="submit">Rate</button>
             </div>
+
+            {% endif %}
           </div>
         </form>
         {% endif %}
