@@ -33,10 +33,26 @@ content %}
             <form class="text-center" method="POST" , action="">
               {{ form.hidden_tag() }}
               <div class="mb-3">
-                {{form.username(class_="form-control",placeholder="Email")}}
+                {{form.username(class_="form-control",placeholder="Email")}} {%
+                if form.username.errors %}
+                <br />
+                <ul>
+                  {% for error in form.username.errors %}
+                  <li id="error-name">{{ error }}</li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
               </div>
               <div class="mb-3">
                 {{form.password(class_="form-control",placeholder="Password")}}
+                {% if form.password.errors %}
+                <br />
+                <ul>
+                  {% for error in form.password.errors %}
+                  <li id="error-pass">{{ error }}</li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
               </div>
               <div class="mb-3">
                 {{form.submit(class_="btn btn-primary d-block w-100")}}

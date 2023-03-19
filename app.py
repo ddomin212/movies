@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import InputRequired, Length, ValidationError
+from wtforms.validators import InputRequired, Length, ValidationError, Email
 from flask_bcrypt import Bcrypt
 import numpy as np
 import pandas as pd
@@ -36,6 +36,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(40), nullable=False, unique=True)
     password = db.Column(db.String(80), nullable=False)
+    #ratings = db.relationship('Movie', backref='user', lazy=True)
 
 
 class Movie(db.Model, UserMixin):
@@ -43,6 +44,7 @@ class Movie(db.Model, UserMixin):
     user_id = db.Column(db.Integer, foreign_key=True)
     value = db.Column(db.Float, nullable=False)
     movie_id = db.Column(db.Integer, nullable=False)
+    #user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False)
 
 
 with app.app_context():
@@ -68,7 +70,7 @@ class RegisterForm(FlaskForm):
 
 class LoginForm(FlaskForm):
     username = StringField(validators=[
-                           InputRequired(), Length(min=4, max=40)], render_kw={"placeholder": "Username"})
+                           InputRequired(), Email(), Length(min=4, max=40)], render_kw={"placeholder": "Username"})
 
     password = PasswordField(validators=[
                              InputRequired(), Length(min=8, max=20)], render_kw={"placeholder": "Password"})
@@ -78,10 +80,8 @@ class LoginForm(FlaskForm):
 
 # --- load data ---
 df = pd.read_csv('data.csv')
-cs_mat_data = bz2.BZ2File("csf", 'rb')
-cs_mat_f = pickle.load(cs_mat_data)
-cs_mat_data = bz2.BZ2File("cs", 'rb')
-cs_mat = pickle.load(cs_mat_data)
+cs_mat_f = pickle.load("csf.pkl", 'rb')
+cs_mat = pickle.load("cs.pkl", 'rb')
 ind = pickle.load(open('ind.pkl', 'rb'))
 # --- auth routes ---
 
