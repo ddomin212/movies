@@ -70,7 +70,7 @@ class RegisterForm(FlaskForm):
 
 class LoginForm(FlaskForm):
     username = StringField(validators=[
-                           InputRequired(), Email(), Length(min=4, max=40)], render_kw={"placeholder": "Username"})
+                           InputRequired(), Length(min=4, max=40)], render_kw={"placeholder": "Username"})
 
     password = PasswordField(validators=[
                              InputRequired(), Length(min=8, max=20)], render_kw={"placeholder": "Password"})
@@ -80,8 +80,8 @@ class LoginForm(FlaskForm):
 
 # --- load data ---
 df = pd.read_csv('data.csv')
-cs_mat_f = pickle.load("csf.pkl", 'rb')
-cs_mat = pickle.load("cs.pkl", 'rb')
+cs_mat_f = pickle.load(open("csf.pkl", 'rb'))
+cs_mat = pickle.load(open("cs.pkl", 'rb'))
 ind = pickle.load(open('ind.pkl', 'rb'))
 # --- auth routes ---
 
