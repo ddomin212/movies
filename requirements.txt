@@ -1,11 +1,11 @@
 numpy
-pandas
+pandas<2.0.0
 Flask
 gunicorn
-surprise
-scikit-surprise
 flask_bcrypt
 flask_sqlalchemy
 flask_login
 flask_cors
 flask_wtf
+python-dotenv
+pinecone-client

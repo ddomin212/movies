@@ -63,12 +63,14 @@ content %}
         <img
           class="card-img-top w-100 d-block fit-cover d-md-block d-none"
           style="height: 300px"
-          src="https://image.tmdb.org/t/p/original{{rec.image_url}}"
+          src="https://image.tmdb.org/t/p/original{{rec[3]}}"
         />
         <div class="card-body p-4" style="height: 200px">
-          <p class="text-primary card-text mb-0">{{rec.original_title}}</p>
+          <a class="text-primary card-text mb-0" href="/movie/{{rec[0]}}"
+            >{{rec[2]}}</a
+          >
           <p style="font-weight: bold; color: rgb(0, 0, 0); font-size: 22px">
-            {{rec.vote_average}} / 10
+            {{rec[1] / 2}} / 5
           </p>
         </div>
       </div>

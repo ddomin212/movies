@@ -1,2 +1,7 @@
 /venv
 /__pycache__
+/rec_env
+.env
+.dockerignore
+/instance/database.db
+Dockerfile

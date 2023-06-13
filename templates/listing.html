@@ -40,14 +40,15 @@ content %}
                 <img
                   class="card-img-top w-100 d-block fit-cover d-md-block d-none"
                   style="height: 400px"
-                  src="https://image.tmdb.org/t/p/original{{recommendation[items*c+i][2]}}"
+                  src="https://image.tmdb.org/t/p/original{{recommendation[items*c+i][3]}}"
+                  loading="lazy"
                 />
                 <div class="card-body p-4" style="height: 200px">
                   <a
                     class="text-primary card-text mb-0"
-                    href="/movie/{{recommendation[items*c+i][3]}}"
+                    href="/movie/{{recommendation[items*c+i][0]}}"
                   >
-                    {{recommendation[items*c+i][0]}}
+                    {{recommendation[items*c+i][2]}}
                   </a>
                   <p
                     style="
@@ -55,8 +56,11 @@ content %}
                       color: rgb(0, 0, 0);
                       font-size: 22px;
                     "
-                  >
-                    {{recommendation[items*c+i][1]}} / 10
+                  >{% if index != "rating" %}
+                    {{recommendation[items*c+i][1] / 2}} / 5
+                  {% else %}
+                    {{recommendation[items*c+i][1]}} / 5
+                  {% endif %}
                   </p>
                 </div>
               </div>
